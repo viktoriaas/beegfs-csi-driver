@@ -127,7 +127,8 @@ func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVol
 	if status, ok := cs.volumeStatusMap.readStatus(vol.volumeID); ok && status == statusCreated {
 		return &csi.CreateVolumeResponse{
 			Volume: &csi.Volume{
-				VolumeId: vol.volumeID,
+				VolumeId:           vol.volumeID,
+				AccessibleTopology: req.GetAccessibilityRequirements().GetRequisite(),
 			},
 		}, nil
 	}

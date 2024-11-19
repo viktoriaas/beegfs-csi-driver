@@ -40,6 +40,11 @@ var (
 	}
 )
 
+const (
+	DriverName      = "beegfs.csi.netapp.com"
+	BeegfsSupported = DriverName + "/available"
+)
+
 type nodeServer struct {
 	ctlExec                beegfsCtlExecutorInterface
 	nodeID                 string
@@ -283,8 +288,13 @@ func (ns *nodeServer) NodeUnstageVolume(ctx context.Context, req *csi.NodeUnstag
 }
 
 func (ns *nodeServer) NodeGetInfo(ctx context.Context, req *csi.NodeGetInfoRequest) (*csi.NodeGetInfoResponse, error) {
+	segments := map[string]string{
+		BeegfsSupported: "true",
+	}
+
 	return &csi.NodeGetInfoResponse{
-		NodeId: ns.nodeID,
+		NodeId:             ns.nodeID,
+		AccessibleTopology: &csi.Topology{Segments: segments},
 	}, nil
 }
 
