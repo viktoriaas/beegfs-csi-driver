@@ -100,6 +100,7 @@ func newControllerServerSanity(nodeID string, pluginConfig beegfsv1.PluginConfig
 // to properly set those permissions.
 func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVolumeRequest) (*csi.CreateVolumeResponse, error) {
 	// Check arguments.
+	LogDebug(ctx, "Inside CreateVolume controller")
 	volName := req.GetName()
 	if len(volName) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Volume name not provided")
@@ -111,6 +112,26 @@ func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVol
 	if valid, reason := isValidVolumeCapabilities(volCaps); !valid {
 		return nil, status.Errorf(codes.InvalidArgument, "Volume capabilities not supported: %s", reason)
 	}
+
+	manualAccessReq := map[string]string{}
+	accessReq := req.GetAccessibilityRequirements().GetRequisite()
+	if req.GetAccessibilityRequirements() == nil {
+		LogDebug(ctx, "Req.GetAccessibilityRequirements is nil?")
+	} else {
+		requisite := req.GetAccessibilityRequirements().GetRequisite()
+		if len(requisite) == 0 {
+			LogDebug(ctx, "Req.GetAccessibilityRequirements.GetRequisite is nil?")
+		} else {
+			for _, topology := range requisite {
+				for k, v := range topology.Segments {
+					manualAccessReq[k] = v
+				}
+
+			}
+		}
+	}
+	LogDebug(ctx, "GetRequisite output", "getRequisite", accessReq)
+	LogDebug(ctx, "manual requisite map", "manual", manualAccessReq)
 
 	if len(req.GetParameters()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Parameters not provided")
