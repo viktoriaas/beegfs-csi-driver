@@ -113,26 +113,6 @@ func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVol
 		return nil, status.Errorf(codes.InvalidArgument, "Volume capabilities not supported: %s", reason)
 	}
 
-	manualAccessReq := map[string]string{}
-	accessReq := req.GetAccessibilityRequirements().GetRequisite()
-	if req.GetAccessibilityRequirements() == nil {
-		LogDebug(ctx, "Req.GetAccessibilityRequirements is nil?")
-	} else {
-		requisite := req.GetAccessibilityRequirements().GetRequisite()
-		if len(requisite) == 0 {
-			LogDebug(ctx, "Req.GetAccessibilityRequirements.GetRequisite is nil?")
-		} else {
-			for _, topology := range requisite {
-				for k, v := range topology.Segments {
-					manualAccessReq[k] = v
-				}
-
-			}
-		}
-	}
-	LogDebug(ctx, "GetRequisite output", "getRequisite", accessReq)
-	LogDebug(ctx, "manual requisite map", "manual", manualAccessReq)
-
 	if len(req.GetParameters()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Parameters not provided")
 	}
@@ -221,7 +201,8 @@ func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVol
 	cs.volumeStatusMap.writeStatus(vol.volumeID, statusCreated)
 	return &csi.CreateVolumeResponse{
 		Volume: &csi.Volume{
-			VolumeId: vol.volumeID,
+			VolumeId:           vol.volumeID,
+			AccessibleTopology: req.GetAccessibilityRequirements().GetRequisite(),
 		},
 	}, nil
 }
